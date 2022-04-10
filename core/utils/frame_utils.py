@@ -1,3 +1,6 @@
+# This code was originally taken from RAFT without modification
+# https://github.com/princeton-vl/RAFT/blob/master/utils/frame_utils.py
+
 import numpy as np
 from PIL import Image
 from os.path import *

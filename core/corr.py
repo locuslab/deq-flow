@@ -1,3 +1,6 @@
+# This code was originally taken from RAFT without modification
+# https://github.com/princeton-vl/RAFT/blob/master/core/corr.py
+
 import torch
 import torch.nn.functional as F
 from utils.utils import bilinear_sampler, coords_grid

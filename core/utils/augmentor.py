@@ -1,3 +1,6 @@
+# This code was originally taken from RAFT without modification
+# https://github.com/princeton-vl/RAFT/blob/master/utils/augmentor.py
+
 import numpy as np
 import random
 import math

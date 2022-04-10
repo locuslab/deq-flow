@@ -4,8 +4,6 @@ import torch.nn.functional as F
 from lib.optimizations import weight_norm, VariationalHidDropout2d
 
 from gma import Aggregate
-from attention import Attention
-
 
 class FlowHead(nn.Module):
     def __init__(self, input_dim=128, hidden_dim=256):
@@ -240,17 +238,10 @@ class BasicUpdateBlock(nn.Module):
         
         if args.gma:
             self.gma = Aggregate(dim=cat_dim, dim_head=cat_dim, heads=1)
-            self.attention = None
-
-            gru_in_dim = 2 * cat_dim + hidden_dim
-        elif args.attention:
-            self.gma = None
-            self.attention = Attention(dim=cat_dim, dim_head=cat_dim, heads=1)
 
             gru_in_dim = 2 * cat_dim + hidden_dim
         else:
             self.gma = None
-            self.attention = None
 
             gru_in_dim = cat_dim + hidden_dim
         
@@ -271,9 +262,6 @@ class BasicUpdateBlock(nn.Module):
         if self.gma:
             self.gma._wnorm()
         
-        if self.attention:
-            self.attention._wnorm()
-
     def reset(self):
         self.encoder.reset()
         self.gru.reset()
@@ -281,9 +269,6 @@ class BasicUpdateBlock(nn.Module):
         
         if self.gma:
             self.gma.reset()
-        
-        if self.attention:
-            self.attention.reset()
 
     def forward(self, net, inp, corr, flow, attn=None, upsample=True):
         motion_features = self.encoder(flow, corr)
@@ -291,9 +276,6 @@ class BasicUpdateBlock(nn.Module):
         if self.gma:
             motion_features_global = self.gma(attn, motion_features)
             inp = torch.cat([inp, motion_features, motion_features_global], dim=1)
-        elif self.attention:
-            q_global = self.attention(motion_features, inp, inp)
-            inp = torch.cat([inp, motion_features, q_global], dim=1)
         else:
             inp = torch.cat([inp, motion_features], dim=1)
         

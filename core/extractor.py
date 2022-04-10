@@ -1,3 +1,6 @@
+# This code was originally taken from RAFT without modification
+# https://github.com/princeton-vl/RAFT/blob/master/core/extractor.py
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

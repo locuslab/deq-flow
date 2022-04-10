@@ -32,9 +32,9 @@ except:
             pass
 
 
-class DEQFlow(nn.Module):
+class DEQFlowBase(nn.Module):
     def __init__(self, args):
-        super(DEQFlow, self).__init__()
+        super(DEQFlowBase, self).__init__()
         self.args = args
         
         odim = 256
@@ -89,24 +89,6 @@ class DEQFlow(nn.Module):
         self.eval_f_thres = int(self.f_thres * args.eval_factor)
         self.stop_mode = args.stop_mode
 
-        # Define gradient functions through the backward factory
-        if args.n_losses > 1:
-            delta = int(args.f_thres // args.n_losses)
-            self.indexing = [(k+1)*delta for k in range(args.n_losses)]
-        else:
-            self.indexing = [*args.indexing, args.f_thres]
-
-        indexing_pg = make_pair(self.indexing, args.phantom_grad)
-        produce_grad = [
-                backward_factory(grad_type=pg, tau=args.tau, sup_all=args.sup_all) for pg in indexing_pg
-                ]
-        if args.ift:
-            produce_grad[-1] = backward_factory(
-                grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
-                b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)
-                )
-
-        self.produce_grad = produce_grad
         self.hook = None
 
     def freeze_bn(self):
@@ -114,7 +96,7 @@ class DEQFlow(nn.Module):
             if isinstance(m, nn.BatchNorm2d):
                 m.eval()
 
-    def initialize_flow(self, img):
+    def _initialize_flow(self, img):
         """ Flow is represented as difference between two coordinate grids flow = coords1 - coords0"""
         N, _, H, W = img.shape
         coords0 = coords_grid(N, H//8, W//8, device=img.device)
@@ -122,7 +104,7 @@ class DEQFlow(nn.Module):
 
         # optical flow computed as difference: flow = coords1 - coords0
         return coords0, coords1
-
+    
     def _log_convergence(self, result, name="FORWARD", color="yellow"):
         stop_mode = self.stop_mode
         alt_mode = "rel" if stop_mode == "abs" else "abs"
@@ -137,20 +119,6 @@ class DEQFlow(nn.Module):
 
         return sradius
 
-    def _fixed_point_solve(self, deq_func, z_star, 
-            seed=None, f_thres=None, **kwargs):
-        if f_thres is None: f_thres = self.f_thres
-        indexing = self.indexing if self.training else None
-
-        with torch.no_grad():
-            result = self.f_solver(deq_func, x0=z_star, threshold=f_thres, # To reuse previous coarse fixed points
-                    eps=(1e-3 if self.stop_mode == "abs" else 1e-6), stop_mode=self.stop_mode, indexing=indexing)
-
-            z_star, trajectory = result['result'], result['indexing']
-        if seed: self._log_convergence(result, name="FORWARD", color="yellow")          
-        
-        return z_star, trajectory, min(result['rel_trace']), min(result['abs_trace'])
-    
     def _upsample_flow(self, flow, mask):
         """ Upsample flow field [H/8, W/8, 2] -> [H, W, 2] using convex combination """
         N, _, H, W = flow.shape
@@ -163,7 +131,7 @@ class DEQFlow(nn.Module):
         up_flow = torch.sum(mask * up_flow, dim=2)
         up_flow = up_flow.permute(0, 1, 4, 2, 5, 3)
         return up_flow.reshape(N, 2, 8*H, 8*W)
-    
+        
     def _decode(self, z_out, vec2list, coords0):
         flow_predictions = []
 
@@ -179,10 +147,21 @@ class DEQFlow(nn.Module):
             flow_predictions.append(flow_up)
         
         return flow_predictions
+    
+    def _fixed_point_solve(self, deq_func, z_star, 
+            seed=None, f_thres=None, 
+            **kwargs):
+        raise NotImplementedError
+    
+    def _deq_forward(self, deq_func, list2vec, vec2list, z_star, coords0,
+            flow_gt=None, valid=None, step_seq_loss=None, 
+            seed=None, sradius_mode=False, 
+            **kwargs):
+        raise NotImplementedError
 
     def forward(self, image1, image2, 
             flow_gt=None, valid=None, step_seq_loss=None, 
-            sradius_mode=False, flow_init=None, cached_result=None, 
+            flow_init=None, cached_result=None, sradius_mode=False, 
             **kwargs):
         """ Estimate optical flow between pair of frames """
 
@@ -220,7 +199,7 @@ class DEQFlow(nn.Module):
                 attn = None
 
         bsz, _, H, W = inp.shape
-        coords0, coords1 = self.initialize_flow(image1)
+        coords0, coords1 = self._initialize_flow(image1)
         net = torch.zeros(bsz, hdim, H, W, device=inp.device)
         if cached_result:
             net, coords1 = cached_result
@@ -247,10 +226,56 @@ class DEQFlow(nn.Module):
 
         self.update_block.reset()   # In case we use weight normalization, we need to recompute the weight with wg and wv
         z_star = list2vec(net, coords1)
+        
+        return self._deq_forward(deq_func, list2vec, vec2list, z_star, coords0,
+                flow_gt, valid, step_seq_loss, seed, sradius_mode, 
+                **kwargs)
 
+
+class DEQFlowIndexing(DEQFlowBase):
+    def __init__(self, args):
+        super(DEQFlowIndexing, self).__init__(args)
+        
+        # Define gradient functions through the backward factory
+        if args.n_losses > 1:
+            delta = int(args.f_thres // args.n_losses)
+            self.indexing = [(k+1)*delta for k in range(args.n_losses)]
+        else:
+            self.indexing = [*args.indexing, args.f_thres]
+
+        indexing_pg = make_pair(self.indexing, args.phantom_grad)
+        produce_grad = [
+                backward_factory(grad_type=pg, tau=args.tau, sup_all=args.sup_all) for pg in indexing_pg
+                ]
+        if args.ift:
+            produce_grad[-1] = backward_factory(
+                grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
+                b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)
+                )
+
+        self.produce_grad = produce_grad
+
+    def _fixed_point_solve(self, deq_func, z_star, 
+            seed=None, f_thres=None, **kwargs):
+        if f_thres is None: f_thres = self.f_thres
+        indexing = self.indexing if self.training else None
+
+        with torch.no_grad():
+            result = self.f_solver(deq_func, x0=z_star, threshold=f_thres, # To reuse previous coarse fixed points
+                    eps=(1e-3 if self.stop_mode == "abs" else 1e-6), stop_mode=self.stop_mode, indexing=indexing)
+
+            z_star, trajectory = result['result'], result['indexing']
+        if seed: self._log_convergence(result, name="FORWARD", color="yellow")          
+        
+        return z_star, trajectory, min(result['rel_trace']), min(result['abs_trace'])
+
+    def _deq_forward(self, deq_func, list2vec, vec2list, z_star, coords0,
+            flow_gt=None, valid=None, step_seq_loss=None, 
+            seed=None, sradius_mode=False, 
+            **kwargs):
         # The code for DEQ version, where we use a wrapper. 
         if self.training:
-            _, trajectory, rel_error, abs_error = self._fixed_point_solve(deq_func, z_star, seed=seed)
+            _, trajectory, rel_error, abs_error = self._fixed_point_solve(deq_func, z_star, seed=seed, *kwargs)
             
             z_out = []
             for z_pred, produce_grad in zip(trajectory, self.produce_grad):
@@ -271,3 +296,71 @@ class DEQFlow(nn.Module):
             net, coords1 = vec2list(z_star)
 
             return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1)}
+
+
+class DEQFlowSliced(DEQFlowBase):
+    def __init__(self, args):
+        super(DEQFlowSliced, self).__init__(args)
+        
+        # Define gradient functions through the backward factory
+        if args.n_losses > 1:
+            self.indexing = [int(args.f_thres // args.n_losses) for _ in range(args.n_losses)]
+        else:
+            self.indexing = np.diff([0, *args.indexing, args.f_thres]).tolist()
+
+        indexing_pg = make_pair(self.indexing, args.phantom_grad)
+        produce_grad = [
+                backward_factory(grad_type=pg, tau=args.tau, sup_all=args.sup_all) for pg in indexing_pg
+                ]
+        if args.ift:
+            produce_grad[-1] = backward_factory(
+                grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
+                b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)
+                )
+
+        self.produce_grad = produce_grad
+    
+    def _fixed_point_solve(self, deq_func, z_star, 
+            seed=None, f_thres=None, **kwargs):
+        with torch.no_grad():
+            result = self.f_solver(deq_func, x0=z_star, threshold=f_thres, # To reuse previous coarse fixed points
+                    eps=(1e-3 if self.stop_mode == "abs" else 1e-6), stop_mode=self.stop_mode)
+
+            z_star = result['result'] 
+        if seed: self._log_convergence(result, name="FORWARD", color="yellow")          
+        
+        return z_star, min(result['rel_trace']), min(result['abs_trace'])
+
+    def _deq_forward(self, deq_func, list2vec, vec2list, z_star, coords0,
+            flow_gt=None, valid=None, step_seq_loss=None, 
+            seed=None, sradius_mode=False, 
+            **kwargs):
+        # The code for DEQ version, where we use a wrapper. 
+        if self.training:
+            z_out = []
+            for f_thres, produce_grad in zip(self.indexing, self.produce_grad):
+                z_star, rel_error, abs_error = self._fixed_point_solve(deq_func, z_star, f_thres=f_thres, seed=seed)
+                z_out += produce_grad(self, z_star, deq_func) # See lib/grad.py for implementations
+
+            flow_predictions = self._decode(z_out, vec2list, coords0)
+
+            flow_loss, epe = step_seq_loss(flow_predictions, flow_gt, valid)
+            metrics = process_metrics(epe, rel_error, abs_error)
+
+            return flow_loss, metrics
+        else:
+            # During inference, we directly solve for fixed point
+            z_star, rel_error, abs_error = self._fixed_point_solve(deq_func, z_star, f_thres=self.eval_f_thres, seed=seed)
+            sradius = self._sradius(deq_func, z_star) if sradius_mode else torch.zeros(1, device=z_star.device)
+            
+            flow_up = self._decode([z_star], vec2list, coords0)[0]
+            net, coords1 = vec2list(z_star)
+
+            return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1)}
+
+
+def get_model(args):
+    if args.sliced_core:
+        return DEQFlowSliced
+    else:
+        return DEQFlowIndexing

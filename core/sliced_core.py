@@ -36,37 +36,28 @@ class DEQFlow(nn.Module):
     def __init__(self, args):
         super(DEQFlow, self).__init__()
         self.args = args
+        
+        odim = 256
+        args.corr_levels = 4
+        args.corr_radius = 4
 
         if args.small:
             odim = 128
             self.hidden_dim = hdim = 96
             self.context_dim = cdim = 64
-            args.corr_levels = 4
             args.corr_radius = 3
         elif args.large:
-            odim = 256
             self.hidden_dim = hdim = 192
             self.context_dim = cdim = 192
-            args.corr_levels = 4
-            args.corr_radius = 4
         elif args.huge:
-            odim = 256
             self.hidden_dim = hdim = 256
             self.context_dim = cdim = 256
-            args.corr_levels = 4
-            args.corr_radius = 4
         elif args.gigantic:
-            odim = 256
             self.hidden_dim = hdim = 384
             self.context_dim = cdim = 384
-            args.corr_levels = 4
-            args.corr_radius = 4
         else:
-            odim = 256
             self.hidden_dim = hdim = 128
             self.context_dim = cdim = 128
-            args.corr_levels = 4
-            args.corr_radius = 4
 
         if 'dropout' not in self.args:
             self.args.dropout = 0
@@ -110,7 +101,7 @@ class DEQFlow(nn.Module):
                 ]
         if args.ift:
             produce_grad[-1] = backward_factory(
-                grad_type='ift', saft_ift=args.safe_ift, b_solver=eval(args.b_solver),
+                grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
                 b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)
                 )
 
@@ -269,8 +260,9 @@ class DEQFlow(nn.Module):
         else:
             # During inference, we directly solve for fixed point
             z_star, rel_error, abs_error = self._fixed_point_solve(deq_func, z_star, f_thres=self.eval_f_thres, seed=seed)
-            flow_up = self._decode([z_star], vec2list, coords0)[0]
+            sradius = self._sradius(deq_func, z_star) if sradius_mode else torch.zeros(1, device=z_star.device)
             
-            sradius = self._sradius(deq_func, z_star) if sradius_mode else torch.zeros(bsz,1).to(net)
-                
+            flow_up = self._decode([z_star], vec2list, coords0)[0]
+            net, coords1 = vec2list(z_star)
+
             return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1)}

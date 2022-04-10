@@ -21,7 +21,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import evaluate, viz
-from pipeline import get_model
+# from pipeline import get_model
+from deq import get_model
 from metrics import compute_epe,  merge_metrics
 
 try:
@@ -327,12 +328,11 @@ if __name__ == '__main__':
     parser.add_argument('--testset', type=str, nargs='+')
     parser.add_argument('--vizset', type=str, nargs='+')
     parser.add_argument('--eval_interval', type=int, default=5000, help="evaluation interval")
-    parser.add_argument('--save_interval', type=int, default=5000, help="saving interval")
-    parser.add_argument('--time_interval', type=int, default=100, help="timing interval")
+    parser.add_argument('--save_interval', type=int, default=20000, help="saving interval")
+    parser.add_argument('--time_interval', type=int, default=500, help="timing interval")
     parser.add_argument('--resume_iter', type=int, default=-1, help="resume from the given iterations")
 
     parser.add_argument('--gma', action='store_true', help='use gma')
-    parser.add_argument('--attention', action='store_true', help='use cross attention')
 
     parser.add_argument('--lr', type=float, default=0.00002)
     parser.add_argument('--num_steps', type=int, default=100000)
