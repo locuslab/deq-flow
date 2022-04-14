@@ -21,11 +21,12 @@ from utils.utils import InputPadder, forward_interpolate
 
 
 @torch.no_grad()
-def sintel_visualization(model, warm_start=False, fixed_point_reuse=False, output_path='sintel_viz', **kwargs):
+def sintel_visualization(model, split='test', warm_start=False, fixed_point_reuse=False, output_path='sintel_viz', **kwargs):
     """ Create visualization for the Sintel dataset """
     model.eval()
     for dstype in ['clean', 'final']:
-        test_dataset = datasets.MpiSintel(split='test', aug_params=None, dstype=dstype)
+        split = 'test' if split == 'test' else 'training'
+        test_dataset = datasets.MpiSintel(split=split, aug_params=None, dstype=dstype)
         
         flow_prev, sequence_prev, fixed_point = None, None, None
         for test_id in range(len(test_dataset)):
@@ -39,7 +40,7 @@ def sintel_visualization(model, warm_start=False, fixed_point_reuse=False, outpu
             
             flow_low, flow_pr, info = model(image1, image2, flow_init=flow_prev, cached_result=fixed_point, **kwargs)
             flow = padder.unpad(flow_pr[0]).permute(1, 2, 0).cpu().numpy()
-
+            
             if warm_start:
                 flow_prev = forward_interpolate(flow_low[0])[None].cuda()
             
@@ -61,9 +62,10 @@ def sintel_visualization(model, warm_start=False, fixed_point_reuse=False, outpu
 
 
 @torch.no_grad()
-def kitti_visualization(model, output_path='kitti_viz'):
+def kitti_visualization(model, split='test', output_path='kitti_viz'):
     """ Create visualization for the KITTI dataset """
     model.eval()
+    split = 'testing' if split == 'test' else 'training'
     test_dataset = datasets.KITTI(split='testing', aug_params=None)
 
     if not os.path.exists(output_path):

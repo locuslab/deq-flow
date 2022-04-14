@@ -12,6 +12,7 @@ from gma import Attention
 
 from lib.solvers import anderson, broyden
 from lib.grad import make_pair, backward_factory
+from lib.jacobian import power_method
 
 from termcolor import colored 
 import torch.autograd as autograd
@@ -238,16 +239,20 @@ class DEQFlowIndexing(DEQFlowBase):
         
         # Define gradient functions through the backward factory
         if args.n_losses > 1:
-            delta = int(args.f_thres // args.n_losses)
-            self.indexing = [(k+1)*delta for k in range(args.n_losses)]
+            n_losses = min(args.f_thres, args.n_losses)
+            delta = int(args.f_thres // n_losses)
+            self.indexing = [(k+1)*delta for k in range(n_losses)]
         else:
             self.indexing = [*args.indexing, args.f_thres]
-
+        
+        # By default, we use the same phantom grad for all corrections.
+        # You can also set different grad steps a, b, and c for different terms by ``args.phantom_grad a b c ...''.
         indexing_pg = make_pair(self.indexing, args.phantom_grad)
         produce_grad = [
                 backward_factory(grad_type=pg, tau=args.tau, sup_all=args.sup_all) for pg in indexing_pg
                 ]
         if args.ift:
+            # Enabling args.ift will replace the last gradient function by IFT.
             produce_grad[-1] = backward_factory(
                 grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
                 b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)
@@ -307,12 +312,15 @@ class DEQFlowSliced(DEQFlowBase):
             self.indexing = [int(args.f_thres // args.n_losses) for _ in range(args.n_losses)]
         else:
             self.indexing = np.diff([0, *args.indexing, args.f_thres]).tolist()
-
+        
+        # By default, we use the same phantom grad for all corrections.
+        # You can also set different grad steps a, b, and c for different terms by ``args.phantom_grad a b c ...''.
         indexing_pg = make_pair(self.indexing, args.phantom_grad)
         produce_grad = [
                 backward_factory(grad_type=pg, tau=args.tau, sup_all=args.sup_all) for pg in indexing_pg
                 ]
         if args.ift:
+            # Enabling args.ift will replace the last gradient function by IFT.
             produce_grad[-1] = backward_factory(
                 grad_type='ift', safe_ift=args.safe_ift, b_solver=eval(args.b_solver),
                 b_solver_kwargs=dict(threshold=args.b_thres, stop_mode=args.stop_mode)

@@ -21,9 +21,11 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 import evaluate, viz
-# from pipeline import get_model
-from deq import get_model
 from metrics import compute_epe,  merge_metrics
+
+from deq import get_model
+# from deq_demo import get_model
+# For a simple demo, please refer to deq_demo.py
 
 try:
     from torch.cuda.amp import GradScaler
@@ -279,7 +281,7 @@ def test(args):
     model.cuda()
     model.eval()
     
-    for test_dataset in args.testset:
+    for test_dataset in args.test_set:
         if test_dataset == 'sintel':
             evaluate.create_sintel_submission(model.module, output_path=args.output_path,
                     fixed_point_reuse=args.fixed_point_reuse, warm_start=args.warm_start)
@@ -298,12 +300,13 @@ def visualize(args):
     model.cuda()
     model.eval()
     
-    for viz_dataset in args.vizset:
-        if viz_dataset == 'sintel':
-            viz.sintel_visualization(model.module, output_path=args.output_path,
-                    fixed_point_reuse=args.fixed_point_reuse, warm_start=args.warm_start)
-        elif viz_dataset == 'kitti':
-            viz.kitti_visualization(model.module, output_path=args.output_path)
+    for viz_dataset in args.viz_set:
+        for split in args.viz_split:
+            if viz_dataset == 'sintel':
+                viz.sintel_visualization(model.module, split=split, output_path=args.output_path,
+                        fixed_point_reuse=args.fixed_point_reuse, warm_start=args.warm_start)
+            elif viz_dataset == 'kitti':
+                viz.kitti_visualization(model.module, split=split, output_path=args.output_path)
 
 
 if __name__ == '__main__':
@@ -325,8 +328,10 @@ if __name__ == '__main__':
     parser.add_argument('--gigantic', action='store_true', help='use gigantic model')
     
     parser.add_argument('--validation', type=str, nargs='+')
-    parser.add_argument('--testset', type=str, nargs='+')
-    parser.add_argument('--vizset', type=str, nargs='+')
+    parser.add_argument('--test_set', type=str, nargs='+')
+    parser.add_argument('--viz_set', type=str, nargs='+')
+    parser.add_argument('--viz_split', type=str, nargs='+', default=['test'])
+
     parser.add_argument('--eval_interval', type=int, default=5000, help="evaluation interval")
     parser.add_argument('--save_interval', type=int, default=20000, help="saving interval")
     parser.add_argument('--time_interval', type=int, default=500, help="timing interval")

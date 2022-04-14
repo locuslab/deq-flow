@@ -41,10 +41,13 @@ def create_sintel_submission(model, warm_start=False, fixed_point_reuse=False, o
             
             flow_low, flow_pr, info = model(image1, image2, flow_init=flow_prev, cached_result=fixed_point, **kwargs)
             flow = padder.unpad(flow_pr[0]).permute(1, 2, 0).cpu().numpy()
-
+            
             if warm_start:
                 flow_prev = forward_interpolate(flow_low[0])[None].cuda()
             
+            # Note that the fixed point reuse usually does not improve performance.
+            # It facilitates the convergence.
+            # To improve performance, the borderline check like ``forward_interpolate'' is necessary.
             if fixed_point_reuse:
                 fixed_point = info['cached_result']
 
@@ -201,7 +204,6 @@ def validate_sintel(model, **kwargs):
             padder = InputPadder(image1.shape)
             image1, image2 = padder.pad(image1, image2)
 
-            # flow_low, flow_pr, info = model(image1, image2, cached_result=info["cached_result"], **kwargs)
             flow_low, flow_pr, info = model(image1, image2, **kwargs)
             flow = padder.unpad(flow_pr[0]).cpu()
 

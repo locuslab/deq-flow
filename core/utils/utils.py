@@ -40,7 +40,7 @@ def forward_interpolate(flow):
     y1 = y1.reshape(-1)
     dx = dx.reshape(-1)
     dy = dy.reshape(-1)
-
+    
     valid = (x1 > 0) & (x1 < wd) & (y1 > 0) & (y1 < ht)
     x1 = x1[valid]
     y1 = y1[valid]
