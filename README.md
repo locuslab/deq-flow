@@ -19,6 +19,8 @@ conda activate deq
 
 ## Visualization
 
+<p align="center"/>
+<img src='assets/deq-raft-animation.gif' width="800px"/>
 
 ## Training
 
