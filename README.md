@@ -7,7 +7,7 @@ This is the official repo for paper, *Deep Equilibrium Optical Flow Estimation* 
 
 ## Demo
 
-https://github.com/locuslab/deq-flow/blob/main/assets/demo.mp4
+https://user-images.githubusercontent.com/18630903/163676562-e14a433f-4c71-4994-8e3d-97b3c33d98ab.mp4
 
 ## Requirements
 
