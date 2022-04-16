@@ -8,6 +8,6 @@ python -u main.py --name deq-flow-B-chairs --stage chairs --validation chairs \
 python -u main.py --name deq-flow-B-things --stage things \
     --validation sintel kitti --restore_ckpt checkpoints/deq-flow-B-chairs.pth \
     --gpus 0 1 --num_steps 120000 --batch_size 6 --lr 0.000125 --image_size 400 720 --wdecay 0.0001 \
-    --wnorm --f_solver anderson --f_thres 60 \
-    --phantom_grad 1
+    --wnorm --f_solver anderson --f_thres 40 \
+    --n_losses 2 --phantom_grad 3
 
