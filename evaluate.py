@@ -42,6 +42,11 @@ def create_sintel_submission(model, warm_start=False, fixed_point_reuse=False, o
             flow_low, flow_pr, info = model(image1, image2, flow_init=flow_prev, cached_result=fixed_point, **kwargs)
             flow = padder.unpad(flow_pr[0]).permute(1, 2, 0).cpu().numpy()
             
+            # You may choose to use some hacks here,
+            # for example, warm start, i.e., reusing the f* part with a borderline check (forward_interpolate),
+            # which was orignally taken by RAFT.
+            # This trick usually (only) improves the optical flow estimation on the ``ambush_1'' sequence,
+            # in terms of clearer background estimation.
             if warm_start:
                 flow_prev = forward_interpolate(flow_low[0])[None].cuda()
             
@@ -49,7 +54,9 @@ def create_sintel_submission(model, warm_start=False, fixed_point_reuse=False, o
             # It facilitates the convergence.
             # To improve performance, the borderline check like ``forward_interpolate'' is necessary.
             if fixed_point_reuse:
-                fixed_point = info['cached_result']
+                net, flow_pred_low = info['cached_result']
+                flow_pred_low = forward_interpolate(flow_pred_low[0])[None].cuda()
+                fixed_point = (net, flow_pred_low)
 
             output_dir = os.path.join(output_path, dstype, sequence)
             output_file = os.path.join(output_dir, 'frame%04d.flo' % (frame+1))

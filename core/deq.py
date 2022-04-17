@@ -203,7 +203,8 @@ class DEQFlowBase(nn.Module):
         coords0, coords1 = self._initialize_flow(image1)
         net = torch.zeros(bsz, hdim, H, W, device=inp.device)
         if cached_result:
-            net, coords1 = cached_result
+            net, flow_pred_prev = cached_result
+            coords1 = coords0 + flow_pred_prev
 
         if flow_init is not None:
             coords1 = coords1 + flow_init
@@ -300,7 +301,7 @@ class DEQFlowIndexing(DEQFlowBase):
             flow_up = self._decode([z_star], vec2list, coords0)[0]
             net, coords1 = vec2list(z_star)
 
-            return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1)}
+            return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1 - coords0)}
 
 
 class DEQFlowSliced(DEQFlowBase):
@@ -364,7 +365,7 @@ class DEQFlowSliced(DEQFlowBase):
             flow_up = self._decode([z_star], vec2list, coords0)[0]
             net, coords1 = vec2list(z_star)
 
-            return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1)}
+            return coords1 - coords0, flow_up, {"sradius": sradius, "cached_result": (net, coords1 - coords0)}
 
 
 def get_model(args):

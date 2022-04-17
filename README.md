@@ -34,13 +34,13 @@ Download the datasets into the `datasets` directory.
 
 ## Inference
 
-Download pretrained [checkpoints]() into the `checkpoints` directory. Run the following command to infer over the Sintel train set and the KITTI train set.
+Download pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to infer over the Sintel train set and the KITTI train set.
 
 ```bash
 bash val.sh
 ```
 
-You may expect the following performance statistics of given checkpoints. This is a reference [log](./log/val.log).
+You may expect the following performance statistics of given checkpoints. This is a reference [log](https://github.com/locuslab/deq-flow/blob/main/ref/val.txt).
 
 |  Checkpoint Name | Sintel (clean) | Sintel (final) | KITTI AEPE  | KITTI F1-all |
 | :--------------: | :------------: | :------------: | :---------: | :----------: |
@@ -51,7 +51,7 @@ You may expect the following performance statistics of given checkpoints. This i
 
 ## Visualization
 
-Download pretrained [checkpoints]() into the `checkpoints` directory. Run the following command to visualize the optical flow estimation over the KITTI test set.
+Download pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to visualize the optical flow estimation over the KITTI test set.
 
 ```bash
 bash viz.sh
@@ -59,27 +59,31 @@ bash viz.sh
 
 ## Training
 
-Download Chairs pretrained [checkpoints]() into the `checkpoints` directory.
+Download Chairs pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory.
 
-For the efficiency mode, you can run 1-step gradient to train DEQ-Flow-B via the following command. Memory overhead per GPU is about 5800 MB. This can be further reduced when combined with `--mixed-precision`. You may expect best results of about 1.46 (AEPE) on Sintel (clean), 2.85 (AEPE) on Sintel (final), 5.29 (AEPE) and 16.24 (F1-all) on KITTI. This is a reference [log](./log/B_1_step_grad.log).
+For the efficiency mode, you can run 1-step gradient to train DEQ-Flow-B via the following command. Memory overhead per GPU is about 5800 MB.
+
+You may expect best results of about 1.46 (AEPE) on Sintel (clean), 2.85 (AEPE) on Sintel (final), 5.29 (AEPE) and 16.24 (F1-all) on KITTI. This is a reference [log](https://github.com/locuslab/deq-flow/blob/main/ref/B_1_step_grad.txt).
 
 ```bash
 bash train_B_demo.sh
 ```
 
-For training a demo of DEQ-Flow-H, you can run this command.
+For training a demo of DEQ-Flow-H, you can run this command. Memory overhead per GPU is about 6300 MB. It can be further reduced to about **4200 MB** per GPU when combined with `--mixed-precision`. You can further reduce the memory cost if you employ the CUDA implementation of cost volumn by [RAFT](https://github.com/princeton-vl/RAFT).
+
+You may expect best results of about 1.41 (AEPE) on Sintel (clean), 2.76 (AEPE) on Sintel (final), 4.44 (AEPE) and 14.81 (F1-all) on KITTI. This is a reference [log](https://github.com/locuslab/deq-flow/blob/main/ref/H_1_step_grad.txt).
 
 ```bash
 bash train_H_demo.sh
 ```
 
-To train DQE-Flow-B on Chairs and Things, use the following command.
+To train DEQ-Flow-B on Chairs and Things, use the following command.
 
 ```bash
 bash train_B.sh
 ```
 
-For the performance mode, you can run this command to train DEQ-Flow-H using the ``C+T`` and ``C+T+S+K+H`` schedule. You may expect the performance of < 1.40 (AEPE) on Sintel (clean), 2.60 (AEPE) on Sintel (final), around 4.00 (AEPE) and 13.6 (F1-all) on KITTI. DEQ-Flow-H-1,2,3 are checkpoints from three runs. The best results usually peak at about 80k to 90k on Things.
+For the performance mode, you can run this command to train DEQ-Flow-H using the ``C+T`` and ``C+T+S+K+H`` schedule. You may expect the performance of < 1.40 (AEPE) on Sintel (clean), around 2.60 (AEPE) on Sintel (final), around 4.00 (AEPE) and 13.6 (F1-all) on KITTI. DEQ-Flow-H-1,2,3 are checkpoints from three runs.
 
 This training protocol needs three 11 GB GPUs. In the next several months, an upcoming implementation revision will further reduce this overhead to **less than two 11 GB GPUs**.
 

@@ -45,7 +45,9 @@ def sintel_visualization(model, split='test', warm_start=False, fixed_point_reus
                 flow_prev = forward_interpolate(flow_low[0])[None].cuda()
             
             if fixed_point_reuse:
-                fixed_point = info['cached_result']
+                net, flow_pred_low = info['cached_result']
+                flow_pred_low = forward_interpolate(flow_pred_low[0])[None].cuda()
+                fixed_point = (net, flow_pred_low)
 
             output_dir = os.path.join(output_path, dstype, sequence)
             output_file = os.path.join(output_dir, 'frame%04d.png' % (frame+1))
