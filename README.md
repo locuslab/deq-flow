@@ -1,6 +1,8 @@
 # Deep Equilibrium Optical Flow Estimation
 
-This is the official repo for the paper *Deep Equilibrium Optical Flow Estimation* (CVPR 2022), by [Shaojie Bai](https://jerrybai1995.github.io/)\*, [Zhengyang Geng](https://gsunshine.github.io/)\*, [Yash Savani](https://yashsavani.com/) and [J. Zico Kolter](http://zicokolter.com/). 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/deep-equilibrium-optical-flow-estimation/optical-flow-estimation-on-kitti-2015-train)](https://paperswithcode.com/sota/optical-flow-estimation-on-kitti-2015-train?p=deep-equilibrium-optical-flow-estimation)
+
+This is the official repo for the paper [*Deep Equilibrium Optical Flow Estimation*](https://arxiv.org/abs/2204.08442) (CVPR 2022), by [Shaojie Bai](https://jerrybai1995.github.io/)\*, [Zhengyang Geng](https://gsunshine.github.io/)\*, [Yash Savani](https://yashsavani.com/) and [J. Zico Kolter](http://zicokolter.com/).
 
 <div align=center><img src="assets/frame_0037_frame.png" width="400" height="218" /><img src="assets/frame0037_pred.png" width="400" height="218" /></div>
 
