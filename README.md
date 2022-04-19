@@ -1,17 +1,20 @@
 # Deep Equilibrium Optical Flow Estimation
 
-This is the official repo for paper, *Deep Equilibrium Optical Flow Estimation* (CVPR 2022).
+This is the official repo for the paper *Deep Equilibrium Optical Flow Estimation* (CVPR 2022), by [Shaojie Bai](https://jerrybai1995.github.io/)\*, [Zhengyang Geng](https://gsunshine.github.io/)\*, [Yash Savani](https://yashsavani.com/) and [J. Zico Kolter](http://zicokolter.com/). 
 
-<div align=center><img src="assets/frame_0037_frame.png" width="512" height="218" /></div>
-<div align=center><img src="assets/frame0037_pred.png" width="512" height="218" /></div>
+<div align=center><img src="assets/frame_0037_frame.png" width="400" height="218" /><img src="assets/frame0037_pred.png" width="400" height="218" /></div>
 
+> A deep equilibrium (DEQ) flow estimator directly models the flow as a path-independent, “infinite-level” fixed-point solving process. We propose to use this implicit framework to replace the existing recurrent approach to optical flow estimation. The DEQ flows converge faster, require less memory, are often more accurate, and are compatible with prior model designs (e.g., RAFT and GMA).
+ 
 ## Demo
+
+We provide a demo video of the DEQ flow results below.
 
 https://user-images.githubusercontent.com/18630903/163676562-e14a433f-4c71-4994-8e3d-97b3c33d98ab.mp4
 
 ## Requirements
 
-Install required environments through the following commands.
+The code in this repo has been tested on PyTorch v1.10.0. Install required environments through the following commands.
 
 ```bash
 conda create --name deq python==3.6.10
@@ -20,21 +23,17 @@ conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit
 conda install tensorboard scipy opencv matplotlib einops termcolor -c conda-forge
 ```
 
-Download the datasets into the `datasets` directory.
+Download the following datasets into the `datasets` directory.
 
-[FlyingChairs](https://lmb.informatik.uni-freiburg.de/resources/datasets/FlyingChairs.en.html#flyingchairs)
-
-[FlyingThings3D](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
-
-[MPI Sintel](http://sintel.is.tue.mpg.de/)
-
-[KITTI 2015](http://www.cvlibs.net/datasets/kitti/eval_scene_flow.php?benchmark=flow)
-
-[HD1k](http://hci-benchmark.iwr.uni-heidelberg.de/)
+- [FlyingChairs](https://lmb.informatik.uni-freiburg.de/resources/datasets/FlyingChairs.en.html#flyingchairs)
+- [FlyingThings3D](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html)
+- [MPI Sintel](http://sintel.is.tue.mpg.de/)
+- [KITTI 2015](http://www.cvlibs.net/datasets/kitti/eval_scene_flow.php?benchmark=flow)
+- [HD1k](http://hci-benchmark.iwr.uni-heidelberg.de/)
 
 ## Inference
 
-Download pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to infer over the Sintel train set and the KITTI train set.
+Download the pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to infer over the Sintel train set and the KITTI train set.
 
 ```bash
 bash val.sh
@@ -51,7 +50,7 @@ You may expect the following performance statistics of given checkpoints. This i
 
 ## Visualization
 
-Download pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to visualize the optical flow estimation over the KITTI test set.
+Download the pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory. Run the following command to visualize the optical flow estimation over the KITTI test set.
 
 ```bash
 bash viz.sh
@@ -59,7 +58,7 @@ bash viz.sh
 
 ## Training
 
-Download Chairs pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory.
+Download *FlyingChairs*-pretrained [checkpoints](https://drive.google.com/drive/folders/1PeyOr4kmSuMWrh4iwYKbVLqDU6WPX-HM?usp=sharing) into the `checkpoints` directory.
 
 For the efficiency mode, you can run 1-step gradient to train DEQ-Flow-B via the following command. Memory overhead per GPU is about 5800 MB.
 
@@ -83,9 +82,9 @@ To train DEQ-Flow-B on Chairs and Things, use the following command.
 bash train_B.sh
 ```
 
-For the performance mode, you can run this command to train DEQ-Flow-H using the ``C+T`` and ``C+T+S+K+H`` schedule. You may expect the performance of < 1.40 (AEPE) on Sintel (clean), around 2.60 (AEPE) on Sintel (final), around 4.00 (AEPE) and 13.6 (F1-all) on KITTI. DEQ-Flow-H-1,2,3 are checkpoints from three runs.
+For the performance mode, you can run this command to train DEQ-Flow-H using the ``C+T`` and ``C+T+S+K+H`` schedule. You may expect the performance of <1.40 (AEPE) on Sintel (clean), around 2.60 (AEPE) on Sintel (final), around 4.00 (AEPE) and 13.6 (F1-all) on KITTI. DEQ-Flow-H-1,2,3 are checkpoints from three runs.
 
-This training protocol needs three 11 GB GPUs. In the next several months, an upcoming implementation revision will further reduce this overhead to **less than two 11 GB GPUs**.
+Currently, this training protocol could entail resources slightly more than two 11 GB GPUs. In the near future, we will upload an implementation revision (of the DEQ models) that shall further reduce this overhead to **less than two 11 GB GPUs**.
 
 ```bash
 bash train_H_full.sh
@@ -93,7 +92,7 @@ bash train_H_full.sh
 
 ## A Tutorial on DEQ
 
-If you hope to learn more about DEQ, here is a [tutorial](https://implicit-layers-tutorial.org/) on implicit deep learning. Enjoy yourself!
+If you hope to learn more about DEQ models, here is an official NeurIPS [tutorial](https://implicit-layers-tutorial.org/) on implicit deep learning. Enjoy yourself!
 
 ## Reference
 
@@ -108,6 +107,10 @@ If you find our work helpful to your research, please consider citing this paper
 }
 ```
 
+## Credit
+
+A lot of the utility code in this repo were adapted from the [RAFT](https://github.com/princeton-vl/RAFT) repo and the [DEQ](https://github.com/locuslab/deq) repo.
+
 ## Contact
 
-Feel free to contact us if you have additional questions. Please drop me an email through zhengyanggeng@gmail.com. Find me at [Twitter](https://twitter.com/ZhengyangGeng).
+Feel free to contact us if you have additional questions. Please drop an email through zhengyanggeng@gmail.com (or [Twitter](https://twitter.com/ZhengyangGeng)).
