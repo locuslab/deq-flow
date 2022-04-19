@@ -90,6 +90,10 @@ Currently, this training protocol could entail resources slightly more than two 
 bash train_H_full.sh
 ```
 
+## Code Usage
+
+Under construction. We will provide more detailed instructions on the code usage (e.g., argparse flags, fixed-point solvers, backward IFT modes) in the coming days.
+
 ## A Tutorial on DEQ
 
 If you hope to learn more about DEQ models, here is an official NeurIPS [tutorial](https://implicit-layers-tutorial.org/) on implicit deep learning. Enjoy yourself!
