@@ -1,0 +1,24 @@
+Parameter Count: 13.395 M
+Load from checkpoints/deq-flow-H-things-test-1x.pth
+Validation KITTI: EPE: 3.763 (3.763), F1: 12.95 (12.95)
+[33mVALID | FORWARD | rel: 0.0005664261989295483; abs: 3.7999179363250732; nstep: tensor([60], device='cuda:0')[0m
+[33mVALID | FORWARD | rel: 0.0002732036809902638; abs: 1.8421716690063477; nstep: tensor([60], device='cuda:0')[0m
+Validation (clean) EPE: 1.266 (1.266), 1px: 91.50, 3px: 96.20, 5px: 97.24
+[33mVALID | FORWARD | rel: 0.0008356361649930477; abs: 5.66709566116333; nstep: tensor([60], device='cuda:0')[0m
+Validation (final) EPE: 2.584 (2.584), 1px: 86.48, 3px: 92.51, 5px: 94.21
+Parameter Count: 13.395 M
+Load from checkpoints/deq-flow-H-things-test-3x.pth
+Validation KITTI: EPE: 3.863 (3.863), F1: 13.52 (13.52)
+[33mVALID | FORWARD | rel: 0.0006333217606879771; abs: 4.249484539031982; nstep: tensor([60], device='cuda:0')[0m
+[33mVALID | FORWARD | rel: 0.00028998314519412816; abs: 1.9555532932281494; nstep: tensor([60], device='cuda:0')[0m
+Validation (clean) EPE: 1.270 (1.270), 1px: 91.87, 3px: 96.38, 5px: 97.38
+[33mVALID | FORWARD | rel: 0.0012048647040501237; abs: 8.165122032165527; nstep: tensor([60], device='cuda:0')[0m
+Validation (final) EPE: 2.500 (2.500), 1px: 86.74, 3px: 92.69, 5px: 94.43
+Parameter Count: 13.395 M
+Load from checkpoints/deq-flow-H-things-test-3x.pth
+Validation KITTI: EPE: 3.768 (3.768), F1: 13.41 (13.41)
+[33mVALID | FORWARD | rel: 0.0006324453861452639; abs: 4.2437052726745605; nstep: tensor([120], device='cuda:0')[0m
+[33mVALID | FORWARD | rel: 0.0002864457492250949; abs: 1.931783676147461; nstep: tensor([120], device='cuda:0')[0m
+Validation (clean) EPE: 1.275 (1.275), 1px: 91.86, 3px: 96.38, 5px: 97.39
+[33mVALID | FORWARD | rel: 0.001575868227519095; abs: 10.679956436157227; nstep: tensor([120], device='cuda:0')[0m
+Validation (final) EPE: 2.481 (2.481), 1px: 86.77, 3px: 92.74, 5px: 94.49
